@@ -1,0 +1,47 @@
+﻿,concept,label,2025-08-02,2024-08-03,2023-07-29,level,abstract,dimension
+0,us-gaap_NetCashProvidedByUsedInOperatingActivitiesContinuingOperationsAbstract,Cash Flows from Operating Activities from Continuing Operations:,,,,1,False,False
+1,us-gaap_IncomeLossFromContinuingOperations,Net Income from Continuing Operations,-28844000.0,-118885000.0,-150336000.0,2,False,False
+2,us-gaap_AdjustmentsToReconcileNetIncomeLossToCashProvidedByUsedInOperatingActivitiesAbstract,Adjustments to reconcile net loss from continuing operations to net cash provided by operating activities from continuing operations:,,,,2,False,False
+3,us-gaap_InventoryWriteDown,Change in inventory reserves,4312000.0,-15094000.0,-17919000.0,3,False,False
+4,us-gaap_ShareBasedCompensation,Stock-based compensation expense,-56727000.0,-76756000.0,-102072000.0,3,False,False
+5,us-gaap_DepreciationDepletionAndAmortization,"Depreciation, amortization, and accretion",26124000.0,44489000.0,42122000.0,3,False,False
+6,us-gaap_AssetImpairmentCharges,Asset impairment,0.0,19283000.0,16874000.0,3,False,False
+7,us-gaap_OtherOperatingActivitiesCashFlowStatement,Other,50000.0,-869000.0,1884000.0,3,False,False
+8,us-gaap_IncreaseDecreaseInOperatingCapitalAbstract,Change in operating assets and liabilities:,,,,3,False,False
+9,us-gaap_IncreaseDecreaseInInventories,Inventory,-24779000.0,47739000.0,76047000.0,4,False,False
+10,us-gaap_IncreaseDecreaseInPrepaidDeferredExpenseAndOtherAssets,Prepaid expenses and other assets,1223000.0,3096000.0,11257000.0,4,False,False
+11,us-gaap_IncreaseDecreaseInIncomeTaxesReceivable,Income tax receivables,242000.0,431000.0,52978000.0,4,False,False
+12,sfix_IncreaseDecreaseInOperatingLeaseRightOfUseAssetsAndLiabilities,Operating lease right-of-use assets and liabilities,-11412000.0,-11935000.0,-2996000.0,4,False,False
+13,us-gaap_IncreaseDecreaseInAccountsPayable,Accounts payable,2014000.0,-9746000.0,-40366000.0,4,False,False
+14,us-gaap_IncreaseDecreaseInAccruedLiabilities,Accrued liabilities,3149000.0,5304000.0,-19698000.0,4,False,False
+15,us-gaap_IncreaseDecreaseInContractWithCustomerLiability,Deferred revenue,-601000.0,-2150000.0,-2824000.0,4,False,False
+16,us-gaap_IncreaseDecreaseInOtherDeferredLiability,Gift card liability,-511000.0,-3579000.0,-205000.0,4,False,False
+17,us-gaap_IncreaseDecreaseInOtherOperatingLiabilities,Other liabilities,-2119000.0,-6633000.0,4340000.0,4,False,False
+18,us-gaap_NetCashProvidedByUsedInOperatingActivitiesContinuingOperations,Net Cash from Operating Activities,25575000.0,28207000.0,73230000.0,2,False,False
+19,us-gaap_NetCashProvidedByUsedInInvestingActivitiesContinuingOperationsAbstract,Cash Flows from Investing Activities from Continuing Operations:,,,,1,False,False
+20,us-gaap_ProceedsFromSaleOfPropertyPlantAndEquipment,Proceeds from sale of property and equipment,0.0,350000.0,842000.0,2,False,False
+21,us-gaap_PaymentsToAcquirePropertyPlantAndEquipment,"Payments for Property, Plant and Equipment",-16293000.0,-13965000.0,-18863000.0,2,False,False
+22,us-gaap_PaymentsToAcquireAvailableForSaleSecuritiesDebt,Purchases of securities available-for-sale,-197865000.0,-97322000.0,-258000.0,2,False,False
+23,us-gaap_ProceedsFromSaleOfAvailableForSaleSecuritiesDebt,"Proceeds from Sale of Debt Securities, ",10718000.0,0.0,6524000.0,2,False,False
+24,us-gaap_ProceedsFromMaturitiesPrepaymentsAndCallsOfAvailableForSaleSecurities,"Proceeds from Maturities, Prepayments and Calls of Securities",144319000.0,32195000.0,76231000.0,2,False,False
+25,us-gaap_NetCashProvidedByUsedInInvestingActivitiesContinuingOperations,Net Cash from Investing Activities,-59121000.0,-78742000.0,64476000.0,2,False,False
+26,us-gaap_NetCashProvidedByUsedInFinancingActivitiesContinuingOperationsAbstract,Cash Flows from Financing Activities from Continuing Operations:,,,,1,False,False
+27,us-gaap_ProceedsFromStockOptionsExercised,"Proceeds from the exercise of stock options, net",1093000.0,1028000.0,161000.0,2,False,False
+28,us-gaap_PaymentsRelatedToTaxWithholdingForShareBasedCompensation,Tax Withholding for Share-Based Compensation,-15967000.0,-16090000.0,-15129000.0,2,False,False
+29,us-gaap_ProceedsFromPaymentsForOtherFinancingActivities,Other,-93000.0,-431000.0,-117000.0,2,False,False
+30,us-gaap_NetCashProvidedByUsedInFinancingActivitiesContinuingOperations,Net Cash from Financing Activities,-14967000.0,-15493000.0,-15085000.0,2,False,False
+31,us-gaap_NetCashProvidedByUsedInContinuingOperations,Net increase (decrease) in cash and cash equivalents from continuing operations,-48513000.0,-66028000.0,122621000.0,1,False,False
+32,us-gaap_NetCashProvidedByUsedInDiscontinuedOperationsAbstract,Cash Flows from Discontinued Operations:,,,,1,False,False
+33,us-gaap_CashProvidedByUsedInOperatingActivitiesDiscontinuedOperations,Net cash used in operating activities from discontinued operations,-397000.0,-9687000.0,-15400000.0,2,False,False
+34,us-gaap_CashProvidedByUsedInInvestingActivitiesDiscontinuedOperations,Net cash used in investing activities from discontinued operations,0.0,0.0,-150000.0,2,False,False
+35,us-gaap_CashProvidedByUsedInFinancingActivitiesDiscontinuedOperations,Net cash used in financing activities from discontinued operations,0.0,-172000.0,-454000.0,2,False,False
+36,us-gaap_NetCashProvidedByUsedInDiscontinuedOperations,Net decrease in cash and cash equivalents from discontinued operations,-397000.0,-9859000.0,-16004000.0,1,False,False
+37,us-gaap_EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations,Effect of exchange rate changes on cash and cash equivalents,0.0,-688000.0,1885000.0,1,False,False
+38,us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect,Net Change in Cash,-48910000.0,-76575000.0,108502000.0,1,False,False
+39,us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents,Cash and cash equivalents at end of period,,,,1,False,False
+40,us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents,Cash and cash equivalents at end of period,,,,1,False,False
+41,us-gaap_SupplementalCashFlowInformationAbstract,Supplemental Disclosure,,,,1,False,False
+42,us-gaap_IncomeTaxesPaidNet,Income Tax Expense,814000.0,1457000.0,1111000.0,2,False,False
+43,us-gaap_CashFlowNoncashInvestingAndFinancingActivitiesDisclosureAbstract,Supplemental Disclosure of Non-Cash Investing and Financing Activities:,,,,1,False,False
+44,us-gaap_CapitalExpendituresIncurredButNotYetPaid,Purchases of property and equipment included in accounts payable and accrued liabilities,1127000.0,1258000.0,1226000.0,2,False,False
+45,sfix_CapitalizedShareBasedCompensation,Capitalized stock-based compensation,2941000.0,4979000.0,6421000.0,2,False,False

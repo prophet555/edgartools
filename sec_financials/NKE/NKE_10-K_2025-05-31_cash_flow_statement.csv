@@ -1,0 +1,40 @@
+﻿,concept,label,2025-05-31,2024-05-31,2023-05-31,level,abstract,dimension
+0,us-gaap_NetCashProvidedByUsedInOperatingActivitiesAbstract,Cash provided (used) by operations:,,,,1,False,False
+1,us-gaap_NetIncomeLoss,Net Income,3219000000.0,5700000000.0,5070000000.0,2,False,False
+2,us-gaap_AdjustmentsToReconcileNetIncomeLossToCashProvidedByUsedInOperatingActivitiesAbstract,Adjustments to reconcile net income to net cash provided (used) by operations:,,,,2,False,False
+3,us-gaap_DepreciationDepletionAndAmortization,Depreciation and amortization,775000000.0,796000000.0,703000000.0,3,False,False
+4,us-gaap_DeferredIncomeTaxExpenseBenefit,Deferred income taxes,-288000000.0,-497000000.0,-117000000.0,3,False,False
+5,us-gaap_ShareBasedCompensation,Stock-based compensation,709000000.0,804000000.0,755000000.0,3,False,False
+6,us-gaap_AssetImpairmentCharges,Impairment and other,33000000.0,48000000.0,156000000.0,3,False,False
+7,us-gaap_ForeignCurrencyTransactionGainLossUnrealized,Net foreign currency adjustments,37000000.0,-138000000.0,-213000000.0,3,False,False
+8,us-gaap_IncreaseDecreaseInOperatingCapitalAbstract,Changes in certain working capital components and other assets and liabilities:,,,,2,False,False
+9,us-gaap_IncreaseDecreaseInAccountsReceivable,(Increase) decrease in accounts receivable,-257000000.0,-329000000.0,489000000.0,3,False,False
+10,us-gaap_IncreaseDecreaseInInventories,(Increase) decrease in inventories,120000000.0,908000000.0,-133000000.0,3,False,False
+11,us-gaap_IncreaseDecreaseInPrepaidDeferredExpenseAndOtherAssets,"(Increase) decrease in prepaid expenses, operating lease right-of-use assets and other current and non-current assets",-224000000.0,-260000000.0,-644000000.0,3,False,False
+12,us-gaap_IncreaseDecreaseInAccountsPayableAndOtherOperatingLiabilities,"Increase (decrease) in accounts payable, accrued liabilities, operating lease liabilities and other current and non-current liabilities",-426000000.0,397000000.0,-225000000.0,3,False,False
+13,us-gaap_NetCashProvidedByUsedInOperatingActivities,Net Cash from Operating Activities,3698000000.0,7429000000.0,5841000000.0,2,False,False
+14,us-gaap_NetCashProvidedByUsedInInvestingActivitiesAbstract,Cash provided (used) by investing activities:,,,,1,False,False
+15,us-gaap_PaymentsToAcquireAvailableForSaleSecuritiesDebt,Purchases of short-term investments,-3234000000.0,-4767000000.0,-6059000000.0,2,False,False
+16,us-gaap_ProceedsFromMaturitiesPrepaymentsAndCallsOfAvailableForSaleSecurities,"Proceeds from Maturities, Prepayments and Calls of Securities",319000000.0,2269000000.0,3356000000.0,2,False,False
+17,us-gaap_ProceedsFromSaleOfAvailableForSaleSecuritiesDebt,"Proceeds from Sale of Debt Securities, ",3062000000.0,4219000000.0,4184000000.0,2,False,False
+18,us-gaap_PaymentsToAcquirePropertyPlantAndEquipment,"Payments for Property, Plant and Equipment",-430000000.0,-812000000.0,-969000000.0,2,False,False
+19,us-gaap_PaymentsForProceedsFromOtherInvestingActivities,Other investing activities,8000000.0,-15000000.0,52000000.0,2,False,False
+20,us-gaap_NetCashProvidedByUsedInInvestingActivities,Net Cash from Investing Activities,-275000000.0,894000000.0,564000000.0,2,False,False
+21,us-gaap_NetCashProvidedByUsedInFinancingActivitiesAbstract,Cash provided (used) by financing activities:,,,,1,False,False
+22,us-gaap_ProceedsFromRepaymentsOfNotesPayable,"Increase (decrease) in notes payable, net",-1000000.0,0.0,-4000000.0,2,False,False
+23,us-gaap_RepaymentsOfDebt,Repayment of borrowings,-1000000000.0,-0.0,-500000000.0,2,False,False
+24,us-gaap_ProceedsFromIssuanceOrSaleOfEquity,Proceeds from exercise of stock options and other stock issuances,551000000.0,667000000.0,651000000.0,2,False,False
+25,us-gaap_PaymentsForRepurchaseOfCommonStock,Repurchase of common stock,-2985000000.0,-4250000000.0,-5480000000.0,2,False,False
+26,us-gaap_PaymentsOfDividendsCommonStock,Dividends — common and preferred,-2300000000.0,-2169000000.0,-2012000000.0,2,False,False
+27,us-gaap_ProceedsFromPaymentsForOtherFinancingActivities,Other financing activities,-85000000.0,-136000000.0,-102000000.0,2,False,False
+28,us-gaap_NetCashProvidedByUsedInFinancingActivities,Net Cash from Financing Activities,-5820000000.0,-5888000000.0,-7447000000.0,2,False,False
+29,us-gaap_EffectOfExchangeRateOnCashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents,Effect of exchange rate changes on cash and equivalents,1000000.0,-16000000.0,-91000000.0,1,False,False
+30,us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect,Net Change in Cash,-2396000000.0,2419000000.0,-1133000000.0,1,False,False
+31,us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents,"CASH AND EQUIVALENTS, END OF YEAR",,,,1,False,False
+32,us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents,"CASH AND EQUIVALENTS, END OF YEAR",,,,1,False,False
+33,us-gaap_SupplementalCashFlowInformationAbstract,Supplemental disclosure of cash flow information:,,,,1,False,False
+34,nke_CashPaidDuringPeriodForAbstract,Cash paid during the year for:,,,,2,True,False
+35,us-gaap_InterestPaidNet,"Interest, net of capitalized interest",389000000.0,381000000.0,347000000.0,3,False,False
+36,us-gaap_IncomeTaxesPaid,Income taxes,1226000000.0,1299000000.0,1517000000.0,3,False,False
+37,us-gaap_CapitalExpendituresIncurredButNotYetPaid,"Non-cash additions to property, plant and equipment",184000000.0,160000000.0,211000000.0,2,False,False
+38,us-gaap_DividendsPayableCurrentAndNoncurrent,Dividends declared and not paid,,,,2,False,False

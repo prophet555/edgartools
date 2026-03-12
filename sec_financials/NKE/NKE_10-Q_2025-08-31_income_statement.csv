@@ -1,0 +1,18 @@
+﻿,concept,label,2025-08-31 (Q3),2024-08-31 (Q3),level,abstract,dimension
+0,us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax,Contract Revenue,11720000000.0,11589000000.0,1,False,False
+1,us-gaap_CostOfGoodsAndServicesSold,Cost of Goods and Services Sold,-6777000000.0,-6332000000.0,1,False,False
+2,us-gaap_GrossProfit,Gross Profit,4943000000.0,5257000000.0,1,False,False
+3,us-gaap_MarketingAndAdvertisingExpense,Demand creation expense,1188000000.0,1226000000.0,1,False,False
+4,us-gaap_GeneralAndAdministrativeExpense,General and Administrative Expense,2828000000.0,2822000000.0,1,False,False
+5,us-gaap_SellingGeneralAndAdministrativeExpense,"Selling, General and Administrative Expense",-4016000000.0,-4048000000.0,1,False,False
+6,us-gaap_InterestIncomeExpenseNonoperatingNet,"Interest expense (income), net",18000000.0,43000000.0,1,False,False
+7,us-gaap_OtherNonoperatingIncomeExpense,"Other (income) expense, net",-23000000.0,55000000.0,1,False,False
+8,us-gaap_IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest,Income Before Tax from Continuing Operations,922000000.0,1307000000.0,1,False,False
+9,us-gaap_IncomeTaxExpenseBenefit,Income Tax Expense,-195000000.0,-256000000.0,1,False,False
+10,us-gaap_NetIncomeLoss,Net Income,727000000.0,1051000000.0,1,False,False
+11,nke_EarningsPerShareBasicAndDilutedEPSAbstract,Earnings per common share:,,,1,True,False
+12,us-gaap_EarningsPerShareBasic,Earnings Per Share (Basic),0.49,0.7,2,False,False
+13,us-gaap_EarningsPerShareDiluted,Earnings Per Share (Diluted),0.49,0.7,2,False,False
+14,us-gaap_WeightedAverageNumberOfSharesOutstandingBasicAbstract,Weighted average common shares outstanding:,,,1,False,False
+15,us-gaap_WeightedAverageNumberOfSharesOutstandingBasic,Shares Outstanding (Basic),1476600000.0,1497700000.0,2,False,False
+16,us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding,Shares Outstanding (Diluted),1479000000.0,1502000000.0,2,False,False
