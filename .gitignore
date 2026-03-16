@@ -7,3 +7,9 @@ __pycache__/
 
 # OS
 .DS_Store
+.claude/
+
+# SEC financials – ignore all generated CSV data and ticker folders,
+# but keep the combine script
+sec_financials/**
+!sec_financials/combine_financials.py
