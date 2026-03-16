@@ -1,0 +1,24 @@
+concept,label,2024-03-31,2024-06-30,2024-09-30,2025-03-31,2025-06-30,2025-09-30
+us-gaap_Revenues,Net revenues and financial income,4333000000.0,9406000000.0,14718000000.0,5935000000.0,12725000000.0,20134000000.0
+us-gaap_CostOfGoodsAndServicesSold,Cost of net revenues and financial expenses,-2309000000.0,-5017000000.0,-7890000000.0,-3164000000.0,-6860000000.0,-11060000000.0
+us-gaap_GrossProfit,Gross profit,,,6828000000.0,,,9074000000.0
+us-gaap_ResearchAndDevelopmentExpense,Product and technology development,-458000000.0,-918000000.0,-1422000000.0,-551000000.0,-1118000000.0,-1685000000.0
+us-gaap_SellingAndMarketingExpense,Sales and marketing,-478000000.0,-989000000.0,-1555000000.0,-599000000.0,-1350000000.0,-2183000000.0
+us-gaap_ProvisionForDoubtfulAccounts,Provision for doubtful accounts,,,-1331000000.0,,,-2108000000.0
+us-gaap_GeneralAndAdministrativeExpense,General and administrative,-186000000.0,-404000000.0,-709000000.0,-255000000.0,-516000000.0,-786000000.0
+us-gaap_OperatingExpenses,Total operating expenses,,,-5017000000.0,,,-6762000000.0
+us-gaap_OperatingIncomeLoss,Income from operations,528000000.0,1254000000.0,1811000000.0,763000000.0,1588000000.0,2312000000.0
+us-gaap_InvestmentIncomeInterest,Interest income and other financial gains,25000000.0,64000000.0,107000000.0,37000000.0,81000000.0,130000000.0
+meli_InterestExpenseAndOtherFinancialCharges,Interest expense and other financial losses,-38000000.0,-77000000.0,-117000000.0,-39000000.0,-75000000.0,-110000000.0
+us-gaap_ForeignCurrencyTransactionLossBeforeTax,"Unrealized foreign currency losses, net",-34000000.0,-92000000.0,-132000000.0,-55000000.0,-172000000.0,-274000000.0
+us-gaap_IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest,Net income before income tax expense,481000000.0,1149000000.0,1669000000.0,706000000.0,1422000000.0,2058000000.0
+us-gaap_IncomeTaxExpenseBenefit,Income tax expense,,,-397000000.0,,,-620000000.0
+us-gaap_NetIncomeLoss,Net income,344000000.0,875000000.0,1272000000.0,494000000.0,1017000000.0,1438000000.0
+us-gaap_EarningsPerShareBasic,Basic net income available to shareholders per common share (in dollars per share),6.78,17.26,25.09,9.74,20.06,28.37
+us-gaap_WeightedAverageNumberOfSharesOutstandingBasic,Weighted average of outstanding common shares (in shares),50697442.0,50697444.0,50697442.0,50697375.0,50697375.0,50697338.0
+us-gaap_EarningsPerShareDiluted,Diluted net income available to shareholders per common share (in dollars per share),6.78,17.26,25.09,9.74,20.06,28.37
+us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding,Weighted average of outstanding common shares (in shares),50697442.0,50697444.0,50697442.0,50697375.0,50697375.0,50697344.0
+us-gaap_IncomeTaxExpenseBenefit,Income Tax Expense (Benefit),-137000000.0,-274000000.0,,-212000000.0,-405000000.0,
+us-gaap_GrossProfit,"Gross Profit, Total",2024000000.0,4389000000.0,,2771000000.0,5865000000.0,
+us-gaap_OperatingExpenses,Operating Expenses,-1496000000.0,-3135000000.0,,-2008000000.0,-4277000000.0,
+us-gaap_ProvisionForDoubtfulAccounts,"Accounts Receivable, Credit Loss Expense (Reversal)",-374000000.0,-824000000.0,,-603000000.0,-1293000000.0,

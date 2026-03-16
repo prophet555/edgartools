@@ -2,9 +2,9 @@
 """
 Extract financial statements from SEC EDGAR using edgartools.
 
-- Fetches the latest 10-K (income statement, balance sheet, cash flow)
-- If 10-Qs exist after the 10-K period end, also fetches those 3 statements
-  for each 10-Q in the current fiscal year
+- Fetches the last 4 10-K filings (income statement, balance sheet, cash flow)
+- Fetches the latest 3 10-Q filings (income statement, balance sheet, cash flow)
+- Saves all files into a folder named after the ticker
 
 Usage:
     python extract_sec.py AAPL
@@ -17,6 +17,7 @@ Requirements:
 import os
 import sys
 import argparse
+import subprocess
 from pathlib import Path
 
 import pandas as pd
@@ -50,7 +51,11 @@ def save_statement(name: str, stmt, path: Path) -> None:
     if stmt is None:
         print(f"  No data for {name}")
         return
-    df = stmt.to_dataframe()
+    try:
+        df = stmt.to_dataframe()
+    except Exception as e:
+        print(f"  Could not convert {name} to dataframe: {e}")
+        return
     if df is not None and not df.empty:
         df.to_csv(path, encoding="utf-8-sig")
         print(f"  Saved → {path}  ({len(df):,} rows)")
@@ -59,7 +64,7 @@ def save_statement(name: str, stmt, path: Path) -> None:
 
 
 def save_filing_financials(financials, label: str, ticker: str, output_dir: Path) -> None:
-    """Save all 3 statements from a Financials object."""
+    """Save income statement, balance sheet, and cash flow from a Financials object."""
     print(f"\n[{label}]")
     save_statement(
         "income_statement",
@@ -78,7 +83,7 @@ def save_filing_financials(financials, label: str, ticker: str, output_dir: Path
     )
 
 
-def extract_and_save_financials(ticker: str, output_dir: Path) -> None:
+def extract_and_save_financials(ticker: str, base_output_dir: Path) -> None:
     print(f"\nFetching financials for {ticker} ...")
 
     try:
@@ -86,58 +91,51 @@ def extract_and_save_financials(ticker: str, output_dir: Path) -> None:
         ticker_str = company.tickers[0] if company.tickers else ticker
         print(f"Company: {company.name} ({ticker_str}) – CIK: {company.cik}")
 
-        # ── 1. Latest 10-K ────────────────────────────────────────────────────
-        tenk_filing = company.get_filings(form="10-K").latest(1)
-        if tenk_filing is None:
+        # Output folder named after the ticker
+        ticker_dir = base_output_dir / ticker_str
+        ticker_dir.mkdir(parents=True, exist_ok=True)
+        print(f"Output folder: {ticker_dir.resolve()}")
+
+        # ── 1. 10-K filings – last 4 years ───────────────────────────────────
+        tenk_filings_all = company.get_filings(form="10-K")
+        tenk_df = tenk_filings_all.to_pandas()
+
+        if tenk_df.empty:
             print("No 10-K filings found.", file=sys.stderr)
             sys.exit(1)
 
-        tenk_period = tenk_filing.period_of_report   # e.g. 2025-05-31
-        tenk_label  = f"10-K_{tenk_period}"
-        print(f"\nLatest 10-K period: {tenk_period} (filed: {tenk_filing.filing_date})")
+        tenk_df["reportDate"] = pd.to_datetime(tenk_df["reportDate"])
+        tenk_latest = tenk_df.sort_values("reportDate", ascending=False).head(4)
 
-        output_dir.mkdir(parents=True, exist_ok=True)
+        print(f"\nFound {len(tenk_latest)} 10-K filing(s) (up to 4 years):")
+        for idx, row in tenk_latest.sort_values("reportDate").iterrows():
+            period = row["reportDate"].strftime("%Y-%m-%d")
+            print(f"  10-K period: {period}  (filed: {row.get('filing_date', 'unknown')})")
+            filing = tenk_filings_all.get_filing_at(idx)
+            label = f"10-K_{period}"
+            obj = filing.obj()
+            save_filing_financials(obj.financials, label, ticker_str, ticker_dir)
 
-        tenk_obj = tenk_filing.obj()
-        save_filing_financials(tenk_obj.financials, tenk_label, ticker, output_dir)
-
-        # ── 2. 10-Qs filed after the 10-K period end ─────────────────────────
+        # ── 2. 10-Q filings – latest 3 ───────────────────────────────────────
         tenq_filings_all = company.get_filings(form="10-Q")
         tenq_df = tenq_filings_all.to_pandas()
 
-        # Keep only 10-Qs whose reportDate is after the 10-K period end
-        tenq_df["reportDate"] = pd.to_datetime(tenq_df["reportDate"])
-        tenq_after = tenq_df[tenq_df["reportDate"] > pd.Timestamp(tenk_period)]
+        if tenq_df.empty:
+            print("\nNo 10-Q filings found – done.")
+        else:
+            tenq_df["reportDate"] = pd.to_datetime(tenq_df["reportDate"])
+            tenq_latest = tenq_df.sort_values("reportDate", ascending=False).head(3)
 
-        if tenq_after.empty:
-            print("\nNo 10-Qs found after the latest 10-K period – done.")
-            return
+            print(f"\nFound {len(tenq_latest)} 10-Q filing(s) (latest 3):")
+            for idx, row in tenq_latest.sort_values("reportDate").iterrows():
+                period = row["reportDate"].strftime("%Y-%m-%d")
+                print(f"  10-Q period: {period}  (filed: {row.get('filing_date', 'unknown')})")
+                filing = tenq_filings_all.get_filing_at(idx)
+                label = f"10-Q_{period}"
+                obj = filing.obj()
+                save_filing_financials(obj.financials, label, ticker_str, ticker_dir)
 
-        print(f"\nFound {len(tenq_after)} 10-Q(s) filed after {tenk_period}:")
-
-        # Build accession → row-index map for fast lookup
-        accession_to_idx = {
-            row["accession_number"]: idx
-            for idx, row in tenq_df.iterrows()
-        }
-
-        # Process in chronological order (oldest first)
-        for _, row in tenq_after.sort_values("reportDate").iterrows():
-            period = row["reportDate"].strftime("%Y-%m-%d")
-            accession = row["accession_number"]
-            print(f"  10-Q period: {period}")
-
-            df_idx = accession_to_idx.get(accession)
-            if df_idx is None:
-                print(f"    Could not find index for {accession} – skipping.")
-                continue
-
-            tenq_filing = tenq_filings_all.get_filing_at(df_idx)
-            tenq_label = f"10-Q_{period}"
-            tenq_obj = tenq_filing.obj()
-            save_filing_financials(tenq_obj.financials, tenq_label, ticker, output_dir)
-
-        print("\nDone. Check the output folder for CSV files.")
+        print(f"\nDone. All files saved to: {ticker_dir.resolve()}")
 
     except Exception as e:
         import traceback
@@ -153,12 +151,27 @@ def main() -> None:
         "--output-dir", "-o",
         type=Path,
         default=Path("./sec_financials"),
-        help="Folder to save CSV files (default: ./sec_financials)",
+        help="Base folder; a subfolder named after the ticker will be created inside (default: ./sec_financials)",
     )
 
     args = parser.parse_args()
     ensure_identity()
     extract_and_save_financials(args.ticker, args.output_dir)
+
+    # Run combine_financials.py – resolve relative to this script's directory
+    script_dir = Path(__file__).resolve().parent
+    output_dir = (script_dir / args.output_dir).resolve()
+    combine_script = output_dir / "combine_financials.py"
+    if combine_script.exists():
+        print(f"\nRunning combine_financials.py for {args.ticker} ...")
+        result = subprocess.run(
+            [sys.executable, str(combine_script), args.ticker],
+            cwd=str(output_dir),
+        )
+        if result.returncode != 0:
+            print("Warning: combine_financials.py exited with errors.", file=sys.stderr)
+    else:
+        print(f"\nNote: {combine_script} not found – skipping combine step.")
 
 
 if __name__ == "__main__":

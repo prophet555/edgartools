@@ -1,0 +1,68 @@
+concept,label,2021-12-31,2022-12-31,2023-12-31,2024-12-31,2025-12-31
+us-gaap_CashAndCashEquivalentsAtCarryingValue,Cash and cash equivalents,2585000000.0,1910000000.0,2556000000.0,2635000000.0,3670000000.0
+us-gaap_RestrictedCashAndCashEquivalentsAtCarryingValue,Restricted cash and cash equivalents,1063000000.0,1453000000.0,1292000000.0,2064000000.0,9867000000.0
+us-gaap_ShortTermInvestments,Short-term investments,,2339000000.0,3480000000.0,4485000000.0,2629000000.0
+us-gaap_AccountsReceivableNetCurrent,"Accounts receivable, net",98000000.0,130000000.0,156000000.0,255000000.0,369000000.0
+meli_ReceivableFromCustomerInBrokerageCurrent,"Credit card receivables and other means of payments, net",,,,5288000000.0,6893000000.0
+us-gaap_NotesAndLoansReceivableNetCurrent,"Loans receivable, net of allowances of $3,057 and $1,630 (Note 5)",,,,4716000000.0,8855000000.0
+us-gaap_InventoryNet,Inventories,253000000.0,152000000.0,238000000.0,296000000.0,570000000.0
+us-gaap_OtherAssetsCurrent,Other assets,288000000.0,304000000.0,277000000.0,403000000.0,720000000.0
+us-gaap_AssetsCurrent,Total current assets,8175000000.0,10953000000.0,14260000000.0,20142000000.0,33573000000.0
+us-gaap_LongTermInvestments,Long-term investments,89000000.0,322000000.0,162000000.0,1203000000.0,1764000000.0
+meli_ReceivableFromCustomerInBrokerageNoncurrent,"Credit card receivables and other means of payments, net",,,,0.0,153000000.0
+us-gaap_NotesAndLoansReceivableNetNoncurrent,"Loans receivable, net of allowances of $86 and $48 (Note 5)",,,,179000000.0,510000000.0
+us-gaap_PropertyPlantAndEquipmentAndFinanceLeaseRightOfUseAssetAfterAccumulatedDepreciationAndAmortization,"Property and equipment, net",,993000000.0,1250000000.0,1380000000.0,2303000000.0
+us-gaap_OperatingLeaseRightOfUseAsset,Operating lease right-of-use assets,461000000.0,656000000.0,899000000.0,1098000000.0,2201000000.0
+us-gaap_Goodwill,Goodwill,148000000.0,153000000.0,163000000.0,149000000.0,163000000.0
+us-gaap_IntangibleAssetsNetExcludingGoodwill,"Intangible assets, net",45000000.0,25000000.0,11000000.0,12000000.0,33000000.0
+us-gaap_CryptoAssetFairValue,Intangible assets at fair value,,,24000000.0,49000000.0,0.0
+us-gaap_DeferredIncomeTaxAssetsNet,Deferred tax assets,181000000.0,346000000.0,710000000.0,802000000.0,1541000000.0
+us-gaap_OtherAssetsNoncurrent,Other assets,134000000.0,256000000.0,68000000.0,182000000.0,426000000.0
+us-gaap_AssetsNoncurrent,Total non-current assets,1926000000.0,2783000000.0,3352000000.0,5054000000.0,9094000000.0
+us-gaap_Assets,Total assets,10101000000.0,13736000000.0,17612000000.0,25196000000.0,42667000000.0
+us-gaap_AccountsPayableAndAccruedLiabilitiesCurrent,Accounts payable and accrued expenses,1036000000.0,1393000000.0,2117000000.0,3196000000.0,4502000000.0
+srt_PayablesToCustomers,Funds payable to customers,2393000000.0,3454000000.0,4475000000.0,6954000000.0,13029000000.0
+meli_AmountsPayableDueToCreditAndDebitCardTransactionsCurrent,Amounts payable due to credit and debit card transactions,337000000.0,483000000.0,1072000000.0,1923000000.0,3584000000.0
+us-gaap_EmployeeRelatedLiabilitiesCurrent,Salaries and social security payable,313000000.0,401000000.0,545000000.0,727000000.0,916000000.0
+us-gaap_TaxesPayableCurrent,Taxes payable,291000000.0,414000000.0,477000000.0,525000000.0,1140000000.0
+us-gaap_LoansPayableCurrent,Loans payable and other financial liabilities,1285000000.0,2131000000.0,2292000000.0,2828000000.0,4623000000.0
+us-gaap_OperatingLeaseLiabilityCurrent,Operating lease liabilities,92000000.0,142000000.0,166000000.0,241000000.0,430000000.0
+us-gaap_OtherLiabilitiesCurrent,Other liabilities,90000000.0,129000000.0,119000000.0,209000000.0,409000000.0
+us-gaap_LiabilitiesCurrent,Total current liabilities,5837000000.0,8562000000.0,11263000000.0,16603000000.0,28633000000.0
+meli_AmountsPayableDueToCreditAndDebitCardTransactionsNonCurrent,Amounts payable due to credit and debit card transactions,4000000.0,5000000.0,20000000.0,41000000.0,187000000.0
+us-gaap_LongTermLoansPayable,Loans payable and other financial liabilities,2233000000.0,2627000000.0,2203000000.0,2887000000.0,4570000000.0
+us-gaap_OperatingLeaseLiabilityNoncurrent,Operating lease liabilities,372000000.0,514000000.0,672000000.0,894000000.0,1769000000.0
+us-gaap_DeferredIncomeTaxLiabilitiesNet,Deferred tax liabilities,62000000.0,106000000.0,183000000.0,204000000.0,372000000.0
+us-gaap_OtherLiabilitiesNoncurrent,Other liabilities,62000000.0,95000000.0,200000000.0,216000000.0,388000000.0
+us-gaap_LiabilitiesNoncurrent,Total non-current liabilities,2733000000.0,3347000000.0,3278000000.0,4242000000.0,7286000000.0
+us-gaap_Liabilities,Total liabilities,8570000000.0,11909000000.0,14541000000.0,20845000000.0,35919000000.0
+us-gaap_CommitmentsAndContingencies,Commitments and contingencies (Note 14),,,,,
+us-gaap_CommonStockValue,"Common stock, 0.001 par value, $110,000,000 shares authorized, $50,697,182 and $50,697,375 shares issued and outstanding",,,,0.0,0.0
+us-gaap_AdditionalPaidInCapital,Additional paid-in capital,2439000000.0,2309000000.0,1770000000.0,1770000000.0,1771000000.0
+us-gaap_TreasuryStockCommonValue,"Treasury stock, 225,931 and 225,474 shares",,,,-311000000.0,-312000000.0
+us-gaap_RetainedEarningsAccumulatedDeficit,Retained earnings,397000000.0,913000000.0,1901000000.0,3812000000.0,5809000000.0
+us-gaap_AccumulatedOtherComprehensiveIncomeLossNetOfTax,Accumulated other comprehensive loss,-515000000.0,-464000000.0,-290000000.0,-920000000.0,-520000000.0
+us-gaap_StockholdersEquity,Total equity,,1827000000.0,3071000000.0,4351000000.0,6748000000.0
+us-gaap_LiabilitiesAndStockholdersEquity,Total liabilities and equity,,13736000000.0,17612000000.0,25196000000.0,42667000000.0
+us-gaap_PropertyPlantAndEquipmentNet,"Property and equipment, net",807000000.0,993000000.0,,,
+us-gaap_CommonStockValue,"Common stock, 0.001 par value, 110,000,000 shares authorized, 50,697,442 and 50,257,751 shares issued and outstanding",,0.0,0.0,,
+us-gaap_PrepaidExpenseCurrent,Prepaid expenses,40000000.0,38000000.0,,,
+meli_CustomerCryptoAssetsSafeguardingAssets,Customer crypto-assets safeguarding assets (Note 2),0.0,15000000.0,,,
+meli_CryptoAssetFairValue,Intangible assets at fair value,,0.0,24000000.0,,
+us-gaap_NotesAndLoansReceivableNetNoncurrent,"Loans receivable, net of allowances of $30 and $27 (Note 7)",61000000.0,32000000.0,,,
+us-gaap_StockholdersEquity,Total Equity,1531000000.0,1827000000.0,,,
+us-gaap_FinancingReceivableExcludingAccruedInterestAfterAllowanceForCreditLossCurrent,"Loans receivable, net of allowances of $1,042 and $1,074 (Note 7)",,1704000000.0,2629000000.0,,
+srt_SafeguardingAssetPlatformOperatorCryptoAsset,Customer crypto-assets safeguarding assets,,15000000.0,34000000.0,,
+us-gaap_FinancingReceivableExcludingAccruedInterestAfterAllowanceForCreditLossNoncurrent,"Loans receivable, net of allowances of $42 and $30 (Note 7)",,32000000.0,65000000.0,,
+us-gaap_ShortTermInvestments,"Short-term investments ($1,219 and $602 held in guarantee - Note 5)",810000000.0,2339000000.0,,,
+us-gaap_TreasuryStockValue,Treasury stock,-790000000.0,-931000000.0,,,
+us-gaap_ReceivablesFromCustomers,"Credit card receivables and other means of payments, net",1839000000.0,2946000000.0,3632000000.0,5288000000.0,
+us-gaap_CommonStockValue,"Common stock, 0.001 par value, 110,000,000 shares authorized, 50,257,751 and 50,418,980 shares issued and outstanding",0.0,0.0,,,
+us-gaap_NotesAndLoansReceivableNetNoncurrent,"Loans receivable, net of allowances of $48 and $42 (Note 7)",,,65000000.0,179000000.0,
+us-gaap_NotesAndLoansReceivableNetCurrent,"Loans receivable, net of allowances of $1,074 and $408 (Note 7)",1199000000.0,1704000000.0,,,
+us-gaap_CommonStockValue,"Common stock, 0.001 par value, $110,000,000 shares authorized, $50,697,375 and $50,697,442 shares issued and outstanding",,,0.0,0.0,
+us-gaap_LiabilitiesAndStockholdersEquity,Total Liabilities and Equity,10101000000.0,13736000000.0,,,
+us-gaap_TreasuryStockCommonValue,Treasury stock,,-931000000.0,-310000000.0,-311000000.0,
+us-gaap_NotesAndLoansReceivableNetCurrent,"Loans receivable, net of allowances of $1,630 and $1,042 (Note 7)",,,2629000000.0,4716000000.0,
+srt_SafeguardingLiabilityPlatformOperatorCryptoAsset,Customer crypto-assets safeguarding liabilities,,15000000.0,34000000.0,,
+meli_CustomerCryptoAssetsSafeguardingLiabilities,Customer crypto-assets safeguarding liabilities (Note 2),0.0,15000000.0,,,

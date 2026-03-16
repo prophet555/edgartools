@@ -1,0 +1,19 @@
+concept,label,2023-07-31,2024-07-31,2025-07-31
+us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax,Revenue,1616952000.0,2167771000.0,2673115000.0
+us-gaap_CostOfRevenue,Cost of revenue,362832000.0,477129000.0,618178000.0
+us-gaap_GrossProfit,Gross profit,1254120000.0,1690642000.0,2054937000.0
+us-gaap_SellingAndMarketingExpense,Sales and marketing,959102000.0,1100239000.0,1259158000.0
+us-gaap_ResearchAndDevelopmentExpense,Research and development,350786000.0,499828000.0,672485000.0
+us-gaap_GeneralAndAdministrativeExpense,General and administrative,178855000.0,212052000.0,251754000.0
+us-gaap_OperatingExpenses,Total operating expenses,1488743000.0,1812119000.0,2183397000.0
+us-gaap_OperatingIncomeLoss,Loss from operations,-234623000.0,-121477000.0,-128460000.0
+us-gaap_InvestmentIncomeInterest,Interest income,60462000.0,109130000.0,125364000.0
+us-gaap_InterestExpenseNonoperating,Interest expense,-6541000.0,-13132000.0,-9522000.0
+us-gaap_OtherNonoperatingIncomeExpense,"Other expense, net",-1862000.0,-3750000.0,-5673000.0
+us-gaap_IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest,Loss before income taxes,-182564000.0,-29229000.0,-18291000.0
+us-gaap_IncomeTaxExpenseBenefit,Provision for income taxes,19771000.0,28477000.0,23187000.0
+us-gaap_NetIncomeLoss,Net loss,-202335000.0,-57706000.0,-41478000.0
+us-gaap_EarningsPerShareBasic,"Net loss per share, basic (in dollars per share)",-1.4,-0.39,-0.27
+us-gaap_EarningsPerShareDiluted,"Net loss per share, diluted (in dollars per share)",-1.4,-0.39,-0.27
+us-gaap_WeightedAverageNumberOfSharesOutstandingBasic,"Weighted-average shares used in computing net loss per share, basic (in shares)",144942000.0,149586000.0,154404000.0
+us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding,"Weighted-average shares used in computing net loss per share, diluted (in shares)",144942000.0,149586000.0,154404000.0
