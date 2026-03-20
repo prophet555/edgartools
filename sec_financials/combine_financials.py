@@ -141,7 +141,7 @@ def main():
 
     ticker = sys.argv[1].upper()
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    ticker_dir = os.path.join(script_dir, ticker)
+    ticker_dir = os.path.join(script_dir, f"{ticker}_SEC")
 
     if not os.path.isdir(ticker_dir):
         print(f"Error: folder not found: {ticker_dir}")

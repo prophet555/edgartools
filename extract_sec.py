@@ -16,6 +16,7 @@ Requirements:
 
 import os
 import sys
+import time
 import argparse
 import subprocess
 from pathlib import Path
@@ -63,6 +64,24 @@ def save_statement(name: str, stmt, path: Path) -> None:
         print(f"  No data for {name}")
 
 
+def get_financials_with_retry(filing, retries: int = 3, delay: float = 5.0):
+    """Fetch filing financials, retrying on network timeout."""
+    for attempt in range(1, retries + 1):
+        try:
+            obj = filing.obj()
+            return obj.financials
+        except Exception as e:
+            if "Timeout" in type(e).__name__ or "Timeout" in str(e):
+                if attempt < retries:
+                    print(f"  Timeout on attempt {attempt}/{retries}, retrying in {delay}s...")
+                    time.sleep(delay)
+                    delay *= 2
+                else:
+                    raise
+            else:
+                raise
+
+
 def save_filing_financials(financials, label: str, ticker: str, output_dir: Path) -> None:
     """Save income statement, balance sheet, and cash flow from a Financials object."""
     print(f"\n[{label}]")
@@ -92,7 +111,7 @@ def extract_and_save_financials(ticker: str, base_output_dir: Path) -> None:
         print(f"Company: {company.name} ({ticker_str}) – CIK: {company.cik}")
 
         # Output folder named after the ticker
-        ticker_dir = base_output_dir / ticker_str
+        ticker_dir = base_output_dir / f"{ticker_str}_SEC"
         ticker_dir.mkdir(parents=True, exist_ok=True)
         print(f"Output folder: {ticker_dir.resolve()}")
 
@@ -113,8 +132,10 @@ def extract_and_save_financials(ticker: str, base_output_dir: Path) -> None:
             print(f"  10-K period: {period}  (filed: {row.get('filing_date', 'unknown')})")
             filing = tenk_filings_all.get_filing_at(idx)
             label = f"10-K_{period}"
-            obj = filing.obj()
-            save_filing_financials(obj.financials, label, ticker_str, ticker_dir)
+            try:
+                save_filing_financials(get_financials_with_retry(filing), label, ticker_str, ticker_dir)
+            except Exception as e:
+                print(f"  Skipping {label}: {e.__class__.__name__}: {e}", file=sys.stderr)
 
         # ── 2. 10-Q filings – latest 3 ───────────────────────────────────────
         tenq_filings_all = company.get_filings(form="10-Q")
@@ -132,8 +153,10 @@ def extract_and_save_financials(ticker: str, base_output_dir: Path) -> None:
                 print(f"  10-Q period: {period}  (filed: {row.get('filing_date', 'unknown')})")
                 filing = tenq_filings_all.get_filing_at(idx)
                 label = f"10-Q_{period}"
-                obj = filing.obj()
-                save_filing_financials(obj.financials, label, ticker_str, ticker_dir)
+                try:
+                    save_filing_financials(get_financials_with_retry(filing), label, ticker_str, ticker_dir)
+                except Exception as e:
+                    print(f"  Skipping {label}: {e.__class__.__name__}: {e}", file=sys.stderr)
 
         print(f"\nDone. All files saved to: {ticker_dir.resolve()}")
 
