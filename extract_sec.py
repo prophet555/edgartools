@@ -23,6 +23,7 @@ from pathlib import Path
 
 import pandas as pd
 from edgar import Company, set_identity, get_identity
+from config import DEFAULT_RESEARCH_DIR
 
 
 def ensure_identity() -> None:
@@ -111,8 +112,9 @@ def extract_and_save_financials(ticker: str, base_output_dir: Path) -> None:
         print(f"Company: {company.name} ({ticker_str}) – CIK: {company.cik}")
 
         # Output folder named after the ticker
-        ticker_dir = base_output_dir / f"{ticker_str}_SEC"
-        ticker_dir.mkdir(parents=True, exist_ok=True)
+        ticker_dir = base_output_dir / ticker_str
+        raw_dir = ticker_dir / "raw"
+        raw_dir.mkdir(parents=True, exist_ok=True)
         print(f"Output folder: {ticker_dir.resolve()}")
 
         # ── 1. 10-K filings – last 4 years ───────────────────────────────────
@@ -133,7 +135,7 @@ def extract_and_save_financials(ticker: str, base_output_dir: Path) -> None:
             filing = tenk_filings_all.get_filing_at(idx)
             label = f"10-K_{period}"
             try:
-                save_filing_financials(get_financials_with_retry(filing), label, ticker_str, ticker_dir)
+                save_filing_financials(get_financials_with_retry(filing), label, ticker_str, raw_dir)
             except Exception as e:
                 print(f"  Skipping {label}: {e.__class__.__name__}: {e}", file=sys.stderr)
 
@@ -154,7 +156,7 @@ def extract_and_save_financials(ticker: str, base_output_dir: Path) -> None:
                 filing = tenq_filings_all.get_filing_at(idx)
                 label = f"10-Q_{period}"
                 try:
-                    save_filing_financials(get_financials_with_retry(filing), label, ticker_str, ticker_dir)
+                    save_filing_financials(get_financials_with_retry(filing), label, ticker_str, raw_dir)
                 except Exception as e:
                     print(f"  Skipping {label}: {e.__class__.__name__}: {e}", file=sys.stderr)
 
@@ -173,18 +175,18 @@ def main() -> None:
     parser.add_argument(
         "--output-dir", "-o",
         type=Path,
-        default=Path("./sec_financials"),
-        help="Base folder; a subfolder named after the ticker will be created inside (default: ./sec_financials)",
+        default=DEFAULT_RESEARCH_DIR,
+        help="Base folder; a subfolder named after the ticker will be created inside",
     )
 
     args = parser.parse_args()
     ensure_identity()
     extract_and_save_financials(args.ticker, args.output_dir)
 
-    # Run combine_financials.py – resolve relative to this script's directory
+    # Run combine_financials.py on the output directory
     script_dir = Path(__file__).resolve().parent
-    output_dir = (script_dir / args.output_dir).resolve()
-    combine_script = output_dir / "combine_financials.py"
+    combine_script = script_dir / "sec_financials" / "combine_financials.py"
+    output_dir = args.output_dir.resolve()
     if combine_script.exists():
         print(f"\nRunning combine_financials.py for {args.ticker} ...")
         result = subprocess.run(
@@ -195,6 +197,22 @@ def main() -> None:
             print("Warning: combine_financials.py exited with errors.", file=sys.stderr)
     else:
         print(f"\nNote: {combine_script} not found – skipping combine step.")
+
+    # Run extract_tikr_estimates.py for forward analyst estimates
+    tikr_script = script_dir / "extract_tikr_estimates.py"
+    if tikr_script.exists():
+        print(f"\n{'='*60}")
+        print(f"Running TIKR forward estimates extraction for {args.ticker} ...")
+        print(f"{'='*60}")
+        result = subprocess.run(
+            [sys.executable, str(tikr_script), args.ticker],
+            cwd=str(script_dir),
+        )
+        if result.returncode != 0:
+            print("Warning: extract_tikr_estimates.py exited with errors.", file=sys.stderr)
+            print("Hint: Run 'python extract_tikr_estimates.py --login' first if you haven't logged in yet.")
+    else:
+        print(f"\nNote: {tikr_script} not found – skipping TIKR estimates step.")
 
 
 if __name__ == "__main__":

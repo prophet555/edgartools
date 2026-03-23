@@ -48,11 +48,11 @@ def load_and_filter(filepath):
     df = pd.read_csv(filepath, index_col=0)
 
     # Filter: non-abstract, non-dimensional, non-breakdown rows
-    mask = (
-        (df["abstract"].astype(str) == "False")
-        & (df["dimension"].astype(str) == "False")
-        & (df["is_breakdown"].astype(str) == "False")
-    )
+    # Each filter column is only applied if it exists in the CSV
+    mask = pd.Series(True, index=df.index)
+    for col in ["abstract", "dimension", "is_breakdown"]:
+        if col in df.columns:
+            mask = mask & (df[col].astype(str) == "False")
     df = df[mask].copy()
 
     date_cols = get_date_columns(df)
@@ -140,31 +140,34 @@ def main():
         sys.exit(1)
 
     ticker = sys.argv[1].upper()
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    ticker_dir = os.path.join(script_dir, f"{ticker}_SEC")
 
-    if not os.path.isdir(ticker_dir):
-        print(f"Error: folder not found: {ticker_dir}")
+    # When called from extract_sec.py, cwd is the base research dir;
+    # look for <TICKER>/raw/ for source files, write to <TICKER>/combined/
+    cwd = os.getcwd()
+    ticker_dir = os.path.join(cwd, ticker)
+    raw_dir = os.path.join(ticker_dir, "raw")
+
+    if not os.path.isdir(raw_dir):
+        print(f"Error: raw folder not found: {raw_dir}")
         sys.exit(1)
 
-    print(f"Processing ticker: {ticker}")
-    print(f"Input/output folder: {ticker_dir}")
+    combined_dir = os.path.join(ticker_dir, "combined")
+    os.makedirs(combined_dir, exist_ok=True)
 
-    # Track all source files so we can move them into raw/ afterwards
-    all_source_files = []
+    print(f"Processing ticker: {ticker}")
+    print(f"Input folder:  {raw_dir}")
+    print(f"Output folder: {combined_dir}")
 
     for filing_type in FILING_TYPES:
         for stmt_key, stmt_name in STATEMENT_TYPES.items():
             pattern = os.path.join(
-                ticker_dir, f"{ticker}_{filing_type}_*_{stmt_name}.csv"
+                raw_dir, f"{ticker}_{filing_type}_*_{stmt_name}.csv"
             )
             files = sorted(glob.glob(pattern))
 
             if not files:
                 print(f"\n  No files found for {filing_type} {stmt_name} — skipping")
                 continue
-
-            all_source_files.extend(files)
 
             print(f"\n  {filing_type} {stmt_name}:")
             for f in files:
@@ -173,18 +176,9 @@ def main():
             combined = combine_files(files)
             if combined is not None:
                 out_name = f"{ticker}_{filing_type.replace('-', '')}_{stmt_key}_combined.csv"
-                out_path = os.path.join(ticker_dir, out_name)
+                out_path = os.path.join(combined_dir, out_name)
                 combined.to_csv(out_path, index=False)
                 print(f"    -> {out_name} ({len(combined)} rows, {len(get_date_columns(combined))} periods)")
-
-    # Move individual source CSVs into a raw/ subfolder
-    if all_source_files:
-        raw_dir = os.path.join(ticker_dir, "raw")
-        os.makedirs(raw_dir, exist_ok=True)
-        for f in all_source_files:
-            dest = os.path.join(raw_dir, os.path.basename(f))
-            os.rename(f, dest)
-        print(f"\n  Moved {len(all_source_files)} source file(s) into {raw_dir}")
 
 
 if __name__ == "__main__":
