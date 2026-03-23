@@ -80,6 +80,21 @@ def navigate_to_ticker_estimates(page, ticker: str) -> bool:
         print("Error: Not logged in. Run with --login first.", file=sys.stderr)
         return False
 
+    # Dismiss any blocking overlay/modal (e.g. a welcome dialog or cookie banner)
+    try:
+        overlay = page.query_selector('.v-overlay--active')
+        if overlay and overlay.is_visible():
+            # Press Escape to close the modal
+            page.keyboard.press("Escape")
+            time.sleep(0.5)
+            # If still present, try clicking the scrim to dismiss
+            scrim = page.query_selector('.v-overlay__scrim')
+            if scrim and scrim.is_visible():
+                scrim.click(force=True)
+                time.sleep(0.5)
+    except Exception:
+        pass
+
     # Step 2: Click the search container (the inner <input> has height:0 so
     # Playwright considers it invisible – click the wrapper div instead)
     search_container = None
@@ -97,7 +112,7 @@ def navigate_to_ticker_estimates(page, ticker: str) -> bool:
         print("Error: Could not find search input on TIKR.", file=sys.stderr)
         return False
 
-    search_container.click()
+    search_container.click(force=True)
     time.sleep(0.5)
 
     # Type the ticker via keyboard (input is now focused)
