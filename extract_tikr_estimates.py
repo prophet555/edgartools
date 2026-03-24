@@ -22,6 +22,7 @@ Requirements:
 
 import argparse
 import csv
+import json
 import sys
 import time
 from pathlib import Path
@@ -40,6 +41,22 @@ BROWSER_PROFILE_DIR = Path.home() / ".tikr-playwright-session"
 
 TIKR_BASE_URL = "https://app.tikr.com"
 
+# Cache file mapping ticker → known-good TIKR estimates URL
+TIKR_URL_CACHE_FILE = Path(__file__).resolve().parent / "tikr_url_cache.json"
+
+
+def load_url_cache() -> dict:
+    if TIKR_URL_CACHE_FILE.exists():
+        try:
+            return json.loads(TIKR_URL_CACHE_FILE.read_text())
+        except Exception:
+            return {}
+    return {}
+
+
+def save_url_cache(cache: dict) -> None:
+    TIKR_URL_CACHE_FILE.write_text(json.dumps(cache, indent=2))
+
 
 def wait_for_estimates_table(page, timeout: int = 30000) -> None:
     """Wait for the estimates data table to fully load."""
@@ -56,7 +73,7 @@ def wait_for_estimates_table(page, timeout: int = 30000) -> None:
     time.sleep(1)
 
 
-def navigate_to_ticker_estimates(page, ticker: str) -> bool:
+def navigate_to_ticker_estimates(page, ticker: str, exchange: str | None = None) -> bool:
     """Navigate to the estimates page for a given ticker.
 
     Strategy:
@@ -119,34 +136,72 @@ def navigate_to_ticker_estimates(page, ticker: str) -> bool:
     page.keyboard.type(ticker, delay=80)
     time.sleep(3)  # Wait for autocomplete dropdown
 
-    # Step 3: Click the first matching dropdown result
-    # TIKR uses Vuetify's .menuable__content__active with .v-list-item children
+    # Step 3: Click the best matching dropdown result.
+    # If exchange is supplied (e.g. "LSE", "NYSE"), prefer the item whose text
+    # contains that string; otherwise fall back to the first visible item.
+    # Also extract any href from the item so we can navigate directly.
     clicked = False
+    item_href = None
     items = page.query_selector_all('.menuable__content__active .v-list-item')
+    exchange_upper = exchange.upper() if exchange else ""
+    first_visible = None
+    first_visible_href = None
+
     for item in items:
         try:
-            if item.is_visible():
+            if not item.is_visible():
+                continue
+            href = item.get_attribute("href") or ""
+            if first_visible is None:
+                first_visible = item
+                first_visible_href = href
+            if exchange_upper and exchange_upper in (item.inner_text() or "").upper():
                 item.click()
+                item_href = href
                 clicked = True
                 break
         except Exception:
             continue
 
+    if not clicked and first_visible:
+        try:
+            first_visible.click()
+            item_href = first_visible_href
+            clicked = True
+        except Exception:
+            pass
+
     if not clicked:
-        # Fallback: press Enter
-        page.keyboard.press("Enter")
+        print(f"Error: No search results found for {ticker} on TIKR. "
+              f"Re-run with --url <tikr-estimates-url> for this ticker.", file=sys.stderr)
+        return False
 
     time.sleep(3)  # Wait for stock content to load
 
-    # Step 4: Find the Estimates tab link and navigate directly to it
-    # After selecting a stock, TIKR renders sidebar/tab links with full hrefs
-    estimates_href = page.evaluate("""() => {
+    # Step 4: Find the Estimates tab link and navigate directly to it.
+    # Prefer a link whose cid matches what we clicked (from the dropdown href),
+    # to avoid accidentally picking up a link from a previously loaded stock.
+    cid_from_click = None
+    if item_href:
+        import re as _re
+        m = _re.search(r"cid=(\d+)", item_href)
+        if m:
+            cid_from_click = m.group(1)
+
+    estimates_href = page.evaluate("""(cid) => {
         const links = document.querySelectorAll('a[href*="estimates"], a[href*="tab=est"]');
+        // If we know the cid from the clicked item, prefer a matching link
+        if (cid) {
+            for (const a of links) {
+                if (a.offsetParent !== null && a.href.includes('cid=' + cid)) return a.href;
+            }
+        }
+        // Fall back to any visible estimates link
         for (const a of links) {
             if (a.offsetParent !== null) return a.href;
         }
         return null;
-    }""")
+    }""", cid_from_click)
 
     if estimates_href:
         page.goto(estimates_href, wait_until="domcontentloaded")
@@ -291,11 +346,20 @@ def cleanup_browser_locks() -> None:
         lock_path.unlink(missing_ok=True)
 
 
-def extract_estimates(ticker: str, output_dir: Path, headless: bool = True) -> None:
+def extract_estimates(ticker: str, output_dir: Path, headless: bool = True,
+                      direct_url: str | None = None,
+                      exchange: str | None = None) -> None:
     """Main extraction flow."""
     ticker = ticker.upper()
     output_path = output_dir / ticker / f"{ticker}_tikr_forward_estimates.csv"
     cleanup_browser_locks()
+
+    cache = load_url_cache()
+
+    # Resolve URL: explicit arg > cache > search
+    if not direct_url and ticker in cache:
+        direct_url = cache[ticker]
+        print(f"Using cached URL for {ticker}: {direct_url}")
 
     with sync_playwright() as p:
         browser = p.chromium.launch_persistent_context(
@@ -306,9 +370,29 @@ def extract_estimates(ticker: str, output_dir: Path, headless: bool = True) -> N
         page = browser.new_page()
 
         try:
-            print(f"Navigating to TIKR estimates for {ticker} ...")
-            if not navigate_to_ticker_estimates(page, ticker):
-                sys.exit(1)
+            if direct_url:
+                print(f"Navigating directly to: {direct_url}")
+                page.goto(direct_url, wait_until="domcontentloaded")
+                try:
+                    page.wait_for_load_state("networkidle", timeout=15000)
+                except PlaywrightTimeout:
+                    pass
+                try:
+                    wait_for_estimates_table(page)
+                except PlaywrightTimeout:
+                    print("Error: Estimates table did not load.", file=sys.stderr)
+                    sys.exit(1)
+            else:
+                print(f"Navigating to TIKR estimates for {ticker} ...")
+                if not navigate_to_ticker_estimates(page, ticker, exchange=exchange):
+                    sys.exit(1)
+                print(f"Landed on: {page.url}")
+
+            # Save the resolved URL to cache so future runs go directly to the right page
+            landed_url = page.url
+            if landed_url and "tikr.com" in landed_url:
+                cache[ticker] = landed_url
+                save_url_cache(cache)
 
             print("Extracting table data ...")
             raw_data = extract_table_data(page)
@@ -346,6 +430,20 @@ def main() -> None:
         help="Run browser in visible (non-headless) mode for debugging",
     )
 
+    parser.add_argument(
+        "--url",
+        type=str,
+        default=None,
+        help="Navigate directly to this TIKR estimates URL instead of searching by ticker",
+    )
+    parser.add_argument(
+        "--exchange", "-e",
+        type=str,
+        default=None,
+        help="Prefer search result matching this exchange (e.g. LSE, NYSE, NASDAQ, TSX). "
+             "Not needed for unambiguous US tickers.",
+    )
+
     args = parser.parse_args()
 
     if args.login:
@@ -358,7 +456,8 @@ def main() -> None:
         print(f"  python {sys.argv[0]} {args.ticker} --login", file=sys.stderr)
         sys.exit(1)
 
-    extract_estimates(args.ticker, args.output_dir, headless=not args.visible)
+    extract_estimates(args.ticker, args.output_dir, headless=not args.visible,
+                      direct_url=args.url, exchange=args.exchange)
 
 
 if __name__ == "__main__":

@@ -69,14 +69,21 @@ def load_and_filter(filepath):
 def combine_files(file_list):
     """Combine multiple filing CSVs into one wide dataframe.
 
-    Uses the row order from the most recent filing as the canonical order,
-    then appends any concepts found only in older filings at the end.
-    Uses concept+label as a composite key to handle duplicate concepts.
+    Strategy: most-recent filing is the authoritative base.
+    - Canonical rows come exclusively from the most recent filing (no orphan rows
+      from older filings appended at the bottom).
+    - Prior filings contribute only date columns not already covered by any more-
+      recent filing ("unique" periods).
+    - For each historical period, values are matched to canonical rows by:
+        1. Exact (concept, label) match
+        2. Label-only fallback (case-insensitive) when the label is unique within
+           that filing — handles concept renames between filings.
+    - The most recent filing's own date columns are preserved exactly as-is.
     """
     if not file_list:
         return None
 
-    # Sort files by the latest date column (most recent filing last)
+    # Sort files by the latest date column (oldest filing first, most recent last)
     file_dates = []
     for f in file_list:
         df_tmp = pd.read_csv(f, index_col=0, nrows=0)
@@ -85,52 +92,85 @@ def combine_files(file_list):
         file_dates.append((max_date, f))
     file_dates.sort()
 
-    # Load all files, collect date data keyed by (concept, label)
-    # date_data[date_col] = {(concept, label): value}
-    date_data = {}
-    for _, f in file_dates:
+    most_recent_file = file_dates[-1][1]
+
+    # Canonical rows and date columns come from the most recent filing
+    canonical_df = load_and_filter(most_recent_file)[["concept", "label"]]
+    recent_df = load_and_filter(most_recent_file)
+    recent_dates = get_date_columns(recent_df)
+    claimed_dates = set(recent_dates)
+
+    # Build per-filing lookup tables for their unique historical periods only.
+    # Walk from most-recent to oldest so "claimed" accumulates correctly.
+    # historical_lookups: list of (unique_dates, exact_lookup, label_lookup)
+    #   exact_lookup[(concept, label)][date] = value
+    #   label_lookup[normalized_label][date]  = value  (only for unique labels)
+    historical_lookups = []
+
+    for _, f in reversed(file_dates[:-1]):  # skip most recent
         df = load_and_filter(f)
         date_cols = get_date_columns(df)
+        unique_dates = [d for d in date_cols if d not in claimed_dates]
+        if not unique_dates:
+            continue
+        claimed_dates.update(unique_dates)
+
+        exact_lookup = {}   # (concept, label) -> {date: value}
+        label_counts = {}   # normalized_label -> count of rows with that label
+        label_lookup = {}   # normalized_label -> {date: value}
+
         for _, row in df.iterrows():
             key = (row["concept"], row["label"])
-            for col in date_cols:
-                if col not in date_data:
-                    date_data[col] = {}
-                val = row[col]
+            norm = row["label"].strip().lower()
+            label_counts[norm] = label_counts.get(norm, 0) + 1
+            for date in unique_dates:
+                val = row[date]
                 if pd.notna(val):
-                    date_data[col][key] = val
+                    exact_lookup.setdefault(key, {})[date] = val
+                    label_lookup.setdefault(norm, {})[date] = val
 
-    # Use the most recent filing's row order as canonical
-    most_recent_file = file_dates[-1][1]
-    canonical_df = load_and_filter(most_recent_file)[["concept", "label"]]
-    canonical_keys = list(zip(canonical_df["concept"], canonical_df["label"]))
+        # Remove ambiguous labels (appeared more than once in this filing)
+        label_lookup = {
+            norm: dates for norm, dates in label_lookup.items()
+            if label_counts[norm] == 1
+        }
 
-    # Collect all keys across all periods
-    all_keys = set()
-    for col_data in date_data.values():
-        all_keys.update(col_data.keys())
+        historical_lookups.append((unique_dates, exact_lookup, label_lookup))
 
-    # Find keys not in canonical order (from older filings only)
-    canonical_set = set(canonical_keys)
-    extra_keys = [k for k in all_keys if k not in canonical_set]
+    # Collect all historical unique dates in chronological order
+    all_historical_dates = sorted(
+        date for unique_dates, _, _ in historical_lookups for date in unique_dates
+    )
 
-    if extra_keys:
-        extra_df = pd.DataFrame(extra_keys, columns=["concept", "label"])
-        canonical_df = pd.concat([canonical_df, extra_df], ignore_index=True)
+    # Build output: canonical rows + most-recent columns (as-is) + historical columns
+    result = canonical_df.reset_index(drop=True).copy()
 
-    # Sort date columns chronologically
-    all_dates = sorted(date_data.keys())
+    # Most recent filing's date columns — copied directly, no modification
+    for date in recent_dates:
+        result[date] = recent_df[date].values
 
-    # Build result
-    result = canonical_df.copy()
-    for date_col in all_dates:
-        col_data = date_data[date_col]
-        result[date_col] = [
-            col_data.get((row["concept"], row["label"]), None)
-            for _, row in result.iterrows()
-        ]
+    # Historical columns — filled via exact then label fallback
+    for date in all_historical_dates:
+        values = []
+        for _, row in result.iterrows():
+            key = (row["concept"], row["label"])
+            norm = row["label"].strip().lower()
+            val = None
+            for unique_dates, exact_lookup, label_lookup in historical_lookups:
+                if date not in unique_dates:
+                    continue
+                # Exact match
+                val = exact_lookup.get(key, {}).get(date)
+                if val is None:
+                    # Label fallback
+                    val = label_lookup.get(norm, {}).get(date)
+                break
+            values.append(val)
+        result[date] = values
 
-    return result
+    # Reorder columns: concept, label, then all dates chronologically
+    all_dates = sorted(recent_dates + all_historical_dates)
+    return result[["concept", "label"] + all_dates]
 
 
 def main():
