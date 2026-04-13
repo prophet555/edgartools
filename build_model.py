@@ -131,10 +131,12 @@ def parse_sec_combined(ticker_dir: Path) -> dict:
     """
     ticker = ticker_dir.name
     combined_dir = ticker_dir / "combined"
+    # Support both domestic (10K) and foreign filers (20F)
+    form_prefix = '20F' if (combined_dir / f'{ticker}_20F_income_statement_combined.csv').exists() else '10K'
     sections_map = [
-        ('Income Statement',      f'{ticker}_10K_income_statement_combined.csv'),
-        ('Balance Sheet',         f'{ticker}_10K_balance_sheet_combined.csv'),
-        ('Cash Flow Statement',   f'{ticker}_10K_cash_flow_statement_combined.csv'),
+        ('Income Statement',      f'{ticker}_{form_prefix}_income_statement_combined.csv'),
+        ('Balance Sheet',         f'{ticker}_{form_prefix}_balance_sheet_combined.csv'),
+        ('Cash Flow Statement',   f'{ticker}_{form_prefix}_cash_flow_statement_combined.csv'),
     ]
     result = {}
     for section_name, fname in sections_map:
@@ -1678,17 +1680,28 @@ def main():
         print(f"Error: File not found: {est_path}",file=sys.stderr)
         sys.exit(1)
 
-    # Financials: prefer TIKR CSV, fall back to SEC combined CSVs
-    sec_combined = ticker_dir / "combined" / f"{ticker}_10K_income_statement_combined.csv"
-    if not fin_path.exists() and not sec_combined.exists():
+    # Financials: prefer TIKR CSV, fall back to SEC combined CSVs (10K or 20F)
+    sec_combined_10k = ticker_dir / "combined" / f"{ticker}_10K_income_statement_combined.csv"
+    sec_combined_20f = ticker_dir / "combined" / f"{ticker}_20F_income_statement_combined.csv"
+    sec_combined = sec_combined_10k if sec_combined_10k.exists() else sec_combined_20f
+    if not fin_path.exists() and not sec_combined_10k.exists() and not sec_combined_20f.exists():
         print(f"Error: No financials found. Expected one of:",file=sys.stderr)
         print(f"  {fin_path}",file=sys.stderr)
-        print(f"  {sec_combined}",file=sys.stderr)
+        print(f"  {sec_combined_10k}",file=sys.stderr)
+        print(f"  {sec_combined_20f}",file=sys.stderr)
         sys.exit(1)
 
     fin_source = "TIKR" if fin_path.exists() else "SEC EDGAR"
     print(f"Building model for {ticker} ({company}) ...")
-    print(f"  Financials: {fin_path if fin_path.exists() else ticker_dir/'combined'} [{fin_source}]")
+    if fin_path.exists():
+        print(f"  Financials [{fin_source}]:")
+        print(f"    {fin_path}")
+    else:
+        form_prefix = '20F' if (ticker_dir / "combined" / f"{ticker}_20F_income_statement_combined.csv").exists() else '10K'
+        print(f"  Financials [{fin_source}]:")
+        for stmt in ("income_statement", "balance_sheet", "cash_flow_statement"):
+            f = ticker_dir / "combined" / f"{ticker}_{form_prefix}_{stmt}_combined.csv"
+            print(f"    {f}{'' if f.exists() else '  [NOT FOUND]'}")
     print(f"  Estimates:  {est_path}")
 
     try:
