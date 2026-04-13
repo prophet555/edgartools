@@ -103,6 +103,33 @@ def save_filing_financials(financials, label: str, ticker: str, output_dir: Path
     )
 
 
+def extract_annual_filings(
+    company, form: str, ticker_str: str, raw_dir: Path, n: int = 4
+) -> bool:
+    """Fetch up to n annual filings of the given form (10-K or 20-F). Returns True if any found."""
+    filings_all = company.get_filings(form=form)
+    filings_df = filings_all.to_pandas()
+
+    if filings_df.empty:
+        return False
+
+    filings_df["reportDate"] = pd.to_datetime(filings_df["reportDate"])
+    latest = filings_df.sort_values("reportDate", ascending=False).head(n)
+
+    print(f"\nFound {len(latest)} {form} filing(s) (up to {n} years):")
+    for idx, row in latest.sort_values("reportDate").iterrows():
+        period = row["reportDate"].strftime("%Y-%m-%d")
+        print(f"  {form} period: {period}  (filed: {row.get('filing_date', 'unknown')})")
+        filing = filings_all.get_filing_at(idx)
+        label = f"{form}_{period}"
+        try:
+            save_filing_financials(get_financials_with_retry(filing), label, ticker_str, raw_dir)
+        except Exception as e:
+            print(f"  Skipping {label}: {e.__class__.__name__}: {e}", file=sys.stderr)
+
+    return True
+
+
 def extract_and_save_financials(ticker: str, base_output_dir: Path) -> None:
     print(f"\nFetching financials for {ticker} ...")
 
@@ -117,48 +144,40 @@ def extract_and_save_financials(ticker: str, base_output_dir: Path) -> None:
         raw_dir.mkdir(parents=True, exist_ok=True)
         print(f"Output folder: {ticker_dir.resolve()}")
 
-        # ── 1. 10-K filings – last 4 years ───────────────────────────────────
-        tenk_filings_all = company.get_filings(form="10-K")
-        tenk_df = tenk_filings_all.to_pandas()
+        # ── 1. Annual filings: try 10-K first, fall back to 20-F ─────────────
+        found = extract_annual_filings(company, "10-K", ticker_str, raw_dir)
+        is_foreign = False
+        if not found:
+            print("No 10-K filings found — trying 20-F (foreign filer)...", file=sys.stderr)
+            found = extract_annual_filings(company, "20-F", ticker_str, raw_dir)
+            is_foreign = found
+            if not found:
+                print("No 10-K or 20-F filings found.", file=sys.stderr)
+                sys.exit(1)
 
-        if tenk_df.empty:
-            print("No 10-K filings found.", file=sys.stderr)
-            sys.exit(1)
-
-        tenk_df["reportDate"] = pd.to_datetime(tenk_df["reportDate"])
-        tenk_latest = tenk_df.sort_values("reportDate", ascending=False).head(4)
-
-        print(f"\nFound {len(tenk_latest)} 10-K filing(s) (up to 4 years):")
-        for idx, row in tenk_latest.sort_values("reportDate").iterrows():
-            period = row["reportDate"].strftime("%Y-%m-%d")
-            print(f"  10-K period: {period}  (filed: {row.get('filing_date', 'unknown')})")
-            filing = tenk_filings_all.get_filing_at(idx)
-            label = f"10-K_{period}"
-            try:
-                save_filing_financials(get_financials_with_retry(filing), label, ticker_str, raw_dir)
-            except Exception as e:
-                print(f"  Skipping {label}: {e.__class__.__name__}: {e}", file=sys.stderr)
-
-        # ── 2. 10-Q filings – latest 3 ───────────────────────────────────────
-        tenq_filings_all = company.get_filings(form="10-Q")
-        tenq_df = tenq_filings_all.to_pandas()
-
-        if tenq_df.empty:
-            print("\nNo 10-Q filings found – done.")
+        # ── 2. 10-Q filings – latest 3 (US filers only) ──────────────────────
+        if is_foreign:
+            print("\nForeign filer (20-F) — skipping quarterly filings.")
         else:
-            tenq_df["reportDate"] = pd.to_datetime(tenq_df["reportDate"])
-            tenq_latest = tenq_df.sort_values("reportDate", ascending=False).head(3)
+            tenq_filings_all = company.get_filings(form="10-Q")
+            tenq_df = tenq_filings_all.to_pandas()
 
-            print(f"\nFound {len(tenq_latest)} 10-Q filing(s) (latest 3):")
-            for idx, row in tenq_latest.sort_values("reportDate").iterrows():
-                period = row["reportDate"].strftime("%Y-%m-%d")
-                print(f"  10-Q period: {period}  (filed: {row.get('filing_date', 'unknown')})")
-                filing = tenq_filings_all.get_filing_at(idx)
-                label = f"10-Q_{period}"
-                try:
-                    save_filing_financials(get_financials_with_retry(filing), label, ticker_str, raw_dir)
-                except Exception as e:
-                    print(f"  Skipping {label}: {e.__class__.__name__}: {e}", file=sys.stderr)
+            if tenq_df.empty:
+                print("\nNo 10-Q filings found – done.")
+            else:
+                tenq_df["reportDate"] = pd.to_datetime(tenq_df["reportDate"])
+                tenq_latest = tenq_df.sort_values("reportDate", ascending=False).head(3)
+
+                print(f"\nFound {len(tenq_latest)} 10-Q filing(s) (latest 3):")
+                for idx, row in tenq_latest.sort_values("reportDate").iterrows():
+                    period = row["reportDate"].strftime("%Y-%m-%d")
+                    print(f"  10-Q period: {period}  (filed: {row.get('filing_date', 'unknown')})")
+                    filing = tenq_filings_all.get_filing_at(idx)
+                    label = f"10-Q_{period}"
+                    try:
+                        save_filing_financials(get_financials_with_retry(filing), label, ticker_str, raw_dir)
+                    except Exception as e:
+                        print(f"  Skipping {label}: {e.__class__.__name__}: {e}", file=sys.stderr)
 
         print(f"\nDone. All files saved to: {ticker_dir.resolve()}")
 
@@ -177,6 +196,11 @@ def main() -> None:
         type=Path,
         default=DEFAULT_RESEARCH_DIR,
         help="Base folder; a subfolder named after the ticker will be created inside",
+    )
+    parser.add_argument(
+        "--url",
+        default=None,
+        help="TIKR URL for this company — passed to extract_tikr_estimates.py to skip search",
     )
 
     args = parser.parse_args()
@@ -204,10 +228,10 @@ def main() -> None:
         print(f"\n{'='*60}")
         print(f"Running TIKR forward estimates extraction for {args.ticker} ...")
         print(f"{'='*60}")
-        result = subprocess.run(
-            [sys.executable, str(tikr_script), args.ticker],
-            cwd=str(script_dir),
-        )
+        tikr_cmd = [sys.executable, str(tikr_script), args.ticker]
+        if args.url:
+            tikr_cmd += ["--url", args.url]
+        result = subprocess.run(tikr_cmd, cwd=str(script_dir))
         if result.returncode != 0:
             print("Warning: extract_tikr_estimates.py exited with errors.", file=sys.stderr)
             print("Hint: Run 'python extract_tikr_estimates.py --login' first if you haven't logged in yet.")
