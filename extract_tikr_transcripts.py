@@ -414,6 +414,17 @@ def extract_transcripts(
                 date  = item["date"]
                 title = item["title"]
                 url   = item["url"]
+
+                date_slug = _normalise_date(date) or safe_filename(date)
+                title_slug = safe_filename(title[:70])
+                fname = f"{ticker}_{date_slug}_{title_slug}.txt"
+                out_path = transcripts_dir / fname
+
+                if out_path.exists():
+                    print(f"[{i+1}/{len(to_download)}] Skipping (exists): {fname}")
+                    downloaded.append({"date": date, "title": title, "filename": fname})
+                    continue
+
                 print(f"\n[{i+1}/{len(to_download)}] {date} — {title[:80]}")
 
                 page.goto(url, wait_until="domcontentloaded")
@@ -437,10 +448,7 @@ def extract_transcripts(
                     skipped.append(item)
                     continue
 
-                date_slug = _normalise_date(date) or safe_filename(date)
-                title_slug = safe_filename(title[:70])
-                fname = f"{ticker}_{date_slug}_{title_slug}.txt"
-                save_transcript(text, transcripts_dir / fname)
+                save_transcript(text, out_path)
                 downloaded.append({"date": date, "title": title, "filename": fname})
 
             # ── Step 4: Write index ────────────────────────────────────────────

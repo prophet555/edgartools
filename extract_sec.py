@@ -50,6 +50,9 @@ def ensure_identity() -> None:
 
 def save_statement(name: str, stmt, path: Path) -> None:
     """Convert a Statement to DataFrame and save as CSV."""
+    if path.exists():
+        print(f"  Skipping (exists): {path.name}")
+        return
     if stmt is None:
         print(f"  No data for {name}")
         return
