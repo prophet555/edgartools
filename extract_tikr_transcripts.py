@@ -40,6 +40,7 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from config import DEFAULT_RESEARCH_DIR
+from extract_tikr_estimates import load_url_cache
 
 DEFAULT_OUTPUT_DIR = DEFAULT_RESEARCH_DIR
 BROWSER_PROFILE_DIR = Path.home() / ".tikr-playwright-session"
@@ -192,7 +193,7 @@ def navigate_via_search(page, ticker: str, exchange: str | None = None) -> str |
 # Index page — collect transcript URLs
 # ---------------------------------------------------------------------------
 
-def wait_for_index_table(page, timeout: int = 30000) -> None:
+def wait_for_index_table(page, timeout: int = 60000) -> None:
     """Wait for the transcript index table to render at least one data row."""
     page.wait_for_function(
         "() => document.querySelectorAll('.v-data-table tbody tr').length > 0",
@@ -357,6 +358,12 @@ def extract_transcripts(
     transcripts_dir = output_dir / ticker / "transcripts"
     cleanup_browser_locks()
 
+    if not direct_url:
+        cache = load_url_cache()
+        if ticker in cache:
+            direct_url = cache[ticker]
+            print(f"Using cached URL for {ticker}: {direct_url}")
+
     with sync_playwright() as p:
         browser = p.chromium.launch_persistent_context(
             user_data_dir=str(BROWSER_PROFILE_DIR),
@@ -373,24 +380,58 @@ def extract_transcripts(
             if direct_url:
                 index_url = build_transcripts_index_url(direct_url)
             else:
-                print(f"Searching TIKR for {ticker} ...")
-                index_url = navigate_via_search(page, ticker, exchange=exchange)
-                if not index_url:
-                    sys.exit(1)
+                print(
+                    f"Error: No URL for {ticker}. Pass --url <tikr-url> or add an entry to tikr_url_cache.json.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
 
             # ── Step 2: Load index page and collect links ──────────────────────
-            print(f"Loading transcript index: {index_url}")
-            page.goto(index_url, wait_until="domcontentloaded")
+            # Warm up the SPA via the home page before navigating to the deep link
+            page.goto(TIKR_BASE_URL, wait_until="domcontentloaded")
             try:
-                page.wait_for_load_state("networkidle", timeout=15000)
+                page.wait_for_load_state("networkidle", timeout=10000)
             except PlaywrightTimeout:
                 pass
-            dismiss_overlay(page)
+            time.sleep(2)
 
-            print("Waiting for transcript table ...")
-            try:
-                wait_for_index_table(page)
-            except PlaywrightTimeout:
+            print(f"Loading transcript index: {index_url}")
+            loaded = False
+            for attempt in range(1, 4):
+                page.goto(index_url, wait_until="domcontentloaded")
+                try:
+                    page.wait_for_load_state("networkidle", timeout=15000)
+                except PlaywrightTimeout:
+                    pass
+                dismiss_overlay(page)
+                time.sleep(3)
+                print(f"Waiting for transcript table (attempt {attempt}/3) ...")
+                try:
+                    wait_for_index_table(page)
+                    loaded = True
+                    break
+                except PlaywrightTimeout:
+                    if attempt < 3:
+                        print(f"  Table not ready, retrying in 10s ...", file=sys.stderr)
+                        time.sleep(10)
+            if not loaded:
+                # Diagnostics: print page title and selector counts
+                try:
+                    title = page.title()
+                    url_now = page.url
+                    tr_count = page.evaluate("() => document.querySelectorAll('.v-data-table tbody tr').length")
+                    all_tr = page.evaluate("() => document.querySelectorAll('tbody tr').length")
+                    tab_texts = page.evaluate("() => Array.from(document.querySelectorAll('.v-tab, .v-tabs .v-tab, [role=tab]')).map(e => e.textContent.trim()).filter(Boolean)")
+                    active_tab = page.evaluate("() => { const el = document.querySelector('.v-tab--active, [role=tab][aria-selected=true]'); return el ? el.textContent.trim() : null; }")
+                    no_data = page.evaluate("() => { const el = document.querySelector('.v-data-table__empty-wrapper, .no-data'); return el ? el.textContent.trim() : null; }")
+                    print(f"  Debug — title: {title!r}, url: {url_now}", file=sys.stderr)
+                    print(f"  Debug — .v-data-table tbody tr: {tr_count}, tbody tr: {all_tr}", file=sys.stderr)
+                    print(f"  Debug — tabs: {tab_texts}, active: {active_tab!r}", file=sys.stderr)
+                    print(f"  Debug — no-data text: {no_data!r}", file=sys.stderr)
+                    table_html = page.evaluate("() => { const t = document.querySelector('.v-data-table'); return t ? t.innerHTML.substring(0, 500) : 'NO TABLE FOUND'; }")
+                    print(f"  Debug — table HTML: {table_html}", file=sys.stderr)
+                except Exception as e:
+                    print(f"  Debug — diagnostics failed: {e}", file=sys.stderr)
                 print("Error: Transcript table did not load.", file=sys.stderr)
                 sys.exit(1)
 

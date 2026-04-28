@@ -41,6 +41,7 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from config import DEFAULT_RESEARCH_DIR
+from extract_tikr_estimates import load_url_cache
 
 DEFAULT_OUTPUT_DIR = DEFAULT_RESEARCH_DIR
 BROWSER_PROFILE_DIR = Path.home() / ".tikr-playwright-session"
@@ -48,6 +49,8 @@ TIKR_BASE_URL = "https://app.tikr.com"
 
 DEFAULT_FORMS = ["10-K", "10-Q"]
 FOREIGN_FORMS = ["20-F", "40-F", "6-K"]
+# Japanese/international annual forms (used when neither US nor SEC-foreign forms match)
+INTL_ANNUAL_FORMS = ["Yuho; Annual", "Full Year", "Annual Integrated Report"]
 
 
 # ---------------------------------------------------------------------------
@@ -276,41 +279,55 @@ def collect_filing_rows(page, forms: list[str]) -> list[dict]:
 
 def setup_route_interceptor(page) -> list:
     """
-    Register a Playwright route handler for getDefaultDoc and return a
-    shared list that the handler appends S3 URLs to.
+    Register a Playwright route handler for TIKR document API calls and return
+    a shared list that the handler appends document URLs to.
 
-    Uses page.route (network-level interception) rather than a JS fetch
-    wrapper so it works regardless of whether TIKR uses fetch, XHR, or axios.
+    Intercepts all api.tikr.com calls and captures any response that contains
+    a "url" field (covers getDefaultDoc, getFilingDoc, and similar endpoints).
     """
     captured: list[str] = []
 
     def handle(route):
-        resp = route.fetch()
+        try:
+            resp = route.fetch()
+        except Exception:
+            try:
+                route.abort()
+            except Exception:
+                pass
+            return
         try:
             import json as _json
             data = _json.loads(resp.body())
-            if data.get("url"):
+            if isinstance(data, dict) and data.get("url"):
                 captured.append(data["url"])
         except Exception:
             pass
-        route.fulfill(response=resp)
+        try:
+            route.fulfill(response=resp)
+        except Exception:
+            pass
 
-    page.route("**/getDefaultDoc**", handle)
+    page.route("**api.tikr.com**", handle)
     return captured
 
 
 def click_row_and_get_download_url(
-    page, form: str, period: str, captured: list, timeout_ms: int = 20000
+    page, form: str, period: str, captured: list,
+    context=None, timeout_ms: int = 20000
 ) -> str | None:
     """
     Find the row matching (form, period) in the current DOM, click its link,
-    and wait for the route interceptor to append a new S3 URL to `captured`.
+    and return a download URL via one of two mechanisms:
 
-    Re-queries the DOM at click time so stale indices from a previous render
-    cycle never cause misses.  Polls with page.wait_for_timeout() to keep
-    the Playwright event loop running so the route handler can fire.
+    1. API interception: waits for the route handler to capture a doc URL
+       from api.tikr.com (covers US/SEC filings via getDefaultDoc etc.)
+    2. New-tab detection: if the click opens a new browser tab (common for
+       Japanese/international filings that link directly to external PDFs),
+       grabs the tab's URL and closes the tab.
     """
     before = len(captured)
+    before_pages = len(context.pages) if context else 0
 
     # Scroll the matching row into view and click it
     clicked = page.evaluate("""([form, period]) => {
@@ -340,8 +357,25 @@ def click_row_and_get_download_url(
     while elapsed < timeout_ms:
         page.wait_for_timeout(interval)   # yields to event loop → route handler fires
         elapsed += interval
+
+        # Primary: API interception captured a document URL
         if len(captured) > before:
             return captured[-1]
+
+        # Fallback: click opened a new tab (external or direct PDF links)
+        if context and len(context.pages) > before_pages:
+            new_page = context.pages[-1]
+            try:
+                new_page.wait_for_load_state("domcontentloaded", timeout=10000)
+                url = new_page.url
+            except Exception:
+                url = new_page.url
+            try:
+                new_page.close()
+            except Exception:
+                pass
+            if url and url not in ("about:blank", ""):
+                return url
 
     return None
 
@@ -357,7 +391,9 @@ def download_file(url: str, dest: Path) -> tuple[bool, str]:
             resp.raise_for_status()
             ct = resp.headers.get("content-type", "application/octet-stream")
             ext = ext_from_content_type(ct)
-            final_path = dest.with_suffix(ext)
+            # Use string concatenation instead of with_suffix() to avoid pathlib
+            # mangling filenames that contain dots (e.g. ticker "9983.T").
+            final_path = Path(str(dest) + ext)
             final_path.parent.mkdir(parents=True, exist_ok=True)
             final_path.write_bytes(resp.content)
             return True, ext
@@ -391,10 +427,17 @@ def extract_filings(
     headless: bool = True,
     direct_url: str | None = None,
     exchange: str | None = None,
+    limit: int | None = None,
 ) -> None:
     ticker = ticker.upper()
     filings_dir = output_dir / ticker / "filings"
     cleanup_browser_locks()
+
+    if not direct_url:
+        cache = load_url_cache()
+        if ticker in cache:
+            direct_url = cache[ticker]
+            print(f"Using cached URL for {ticker}: {direct_url}")
 
     with sync_playwright() as p:
         browser = p.chromium.launch_persistent_context(
@@ -412,10 +455,11 @@ def extract_filings(
             if direct_url:
                 filings_url = build_filings_url(direct_url)
             else:
-                print(f"Searching TIKR for {ticker} ...")
-                filings_url = navigate_via_search(page, ticker, exchange=exchange)
-                if not filings_url:
-                    sys.exit(1)
+                print(
+                    f"Error: No URL for {ticker}. Pass --url <tikr-url> or add an entry to tikr_url_cache.json.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
 
             print(f"Loading filings index: {filings_url}")
             page.goto(filings_url, wait_until="domcontentloaded")
@@ -447,6 +491,13 @@ def extract_filings(
                     print(f"No {DEFAULT_FORMS} found — foreign filer detected, switching to {FOREIGN_FORMS}")
                     forms = FOREIGN_FORMS
                     rows = foreign_rows
+                else:
+                    # Second fallback: Japanese / international annual forms
+                    intl_rows = collect_filing_rows(page, INTL_ANNUAL_FORMS)
+                    if intl_rows:
+                        print(f"No {DEFAULT_FORMS} or {FOREIGN_FORMS} found — switching to {INTL_ANNUAL_FORMS}")
+                        forms = INTL_ANNUAL_FORMS
+                        rows = intl_rows
             if not rows:
                 # Show available form types for diagnosis
                 all_forms = page.evaluate("""() => {
@@ -466,6 +517,9 @@ def extract_filings(
                 sys.exit(1)
 
             print(f"Found {len(rows)} filing(s) matching {forms}.")
+            if limit is not None and limit > 0:
+                rows = rows[:limit]
+                print(f"Limiting to {len(rows)} most recent.")
 
             # ── Step 3: Download each filing ───────────────────────────────────
             downloaded = []
@@ -493,7 +547,7 @@ def extract_filings(
                 # Re-expand rows after each Vue re-render resets the table
                 set_rows_per_page_max(page)
                 download_url = click_row_and_get_download_url(
-                    page, form, period, captured_urls
+                    page, form, period, captured_urls, context=browser
                 )
                 if not download_url:
                     print("  Warning: Could not get download URL, skipping.",
@@ -548,6 +602,12 @@ def main() -> None:
         help="Prefer search result from this exchange (e.g. LSE, NASDAQ).",
     )
     parser.add_argument(
+        "--limit", "-n",
+        type=int,
+        default=None,
+        help="Max number of most-recent filings to download (default: all).",
+    )
+    parser.add_argument(
         "--forms",
         nargs="+",
         default=DEFAULT_FORMS,
@@ -581,6 +641,7 @@ def main() -> None:
         headless=not args.visible,
         direct_url=args.url,
         exchange=args.exchange,
+        limit=args.limit,
     )
 
 

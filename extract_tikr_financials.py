@@ -31,11 +31,13 @@ import csv
 import sys
 import time
 from pathlib import Path
+from urllib.parse import urlparse, parse_qs, urlencode
 
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from config import DEFAULT_RESEARCH_DIR
+from extract_tikr_estimates import load_url_cache
 
 DEFAULT_OUTPUT_DIR = DEFAULT_RESEARCH_DIR
 BROWSER_PROFILE_DIR = Path.home() / ".tikr-playwright-session"
@@ -323,6 +325,12 @@ def extract_financials(ticker: str, output_dir: Path, headless: bool = True,
     output_path = output_dir / ticker / f"{ticker}_tikr_financials.csv"
     cleanup_browser_locks()
 
+    if not direct_url:
+        cache = load_url_cache()
+        if ticker in cache:
+            direct_url = cache[ticker]
+            print(f"Using cached URL for {ticker}: {direct_url}")
+
     with sync_playwright() as p:
         browser = p.chromium.launch_persistent_context(
             user_data_dir=str(BROWSER_PROFILE_DIR),
@@ -333,22 +341,28 @@ def extract_financials(ticker: str, output_dir: Path, headless: bool = True,
 
         try:
             if direct_url:
-                print(f"Navigating directly to: {direct_url}")
-                page.goto(direct_url, wait_until="domcontentloaded")
+                # Convert any TIKR URL to the financials page using cid/tid params
+                parsed = urlparse(direct_url)
+                qs = parse_qs(parsed.query)
+                cid = qs.get("cid", [None])[0]
+                tid = qs.get("tid", [None])[0]
+                if cid and tid:
+                    financials_url = f"{TIKR_BASE_URL}/stock/financials?{urlencode({'cid': cid, 'tid': tid})}"
+                else:
+                    financials_url = direct_url
+                print(f"Navigating to TIKR financials for {ticker} ...")
+                page.goto(financials_url, wait_until="domcontentloaded")
                 try:
                     page.wait_for_load_state("networkidle", timeout=15000)
                 except PlaywrightTimeout:
                     pass
-                import time as _time
-                _time.sleep(3)
+                time.sleep(3)
             else:
-                print(f"Navigating to TIKR for {ticker} ...")
-                if not navigate_to_ticker(page, ticker, exchange=exchange):
-                    sys.exit(1)
-
-                print("Navigating to Financials tab ...")
-                if not navigate_to_financials_tab(page, ticker):
-                    sys.exit(1)
+                print(
+                    f"Error: No URL for {ticker}. Pass --url <tikr-url> or add an entry to tikr_url_cache.json.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
 
             statements: dict[str, list[list[str]]] = {}
 

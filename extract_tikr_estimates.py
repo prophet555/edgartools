@@ -26,6 +26,7 @@ import json
 import sys
 import time
 from pathlib import Path
+from urllib.parse import urlparse, parse_qs, urlencode
 
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 
@@ -307,13 +308,18 @@ def do_login(playwright) -> None:
     print("A browser window will open. Please log in to TIKR.")
     print("The script will detect when you're logged in and save the session.\n")
 
+    cleanup_browser_locks()
+
     browser = playwright.chromium.launch_persistent_context(
         user_data_dir=str(BROWSER_PROFILE_DIR),
         headless=False,
+        channel="chrome",
         viewport={"width": 1400, "height": 900},
+        args=["--disable-blink-features=AutomationControlled"],
+        ignore_default_args=["--enable-automation"],
     )
     page = browser.new_page()
-    page.goto(TIKR_BASE_URL)
+    page.goto(f"{TIKR_BASE_URL}/login")
 
     # Wait until the URL no longer contains login/signin (i.e., user is logged in)
     # or until the page shows authenticated content (search bar, dashboard, etc.)
@@ -365,14 +371,26 @@ def extract_estimates(ticker: str, output_dir: Path, headless: bool = True,
         browser = p.chromium.launch_persistent_context(
             user_data_dir=str(BROWSER_PROFILE_DIR),
             headless=headless,
+            channel="chrome",
             viewport={"width": 1400, "height": 900},
+            args=["--disable-blink-features=AutomationControlled"],
+            ignore_default_args=["--enable-automation"],
         )
         page = browser.new_page()
 
         try:
             if direct_url:
-                print(f"Navigating directly to: {direct_url}")
-                page.goto(direct_url, wait_until="domcontentloaded")
+                # Convert any TIKR URL to the estimates page using cid/tid params
+                parsed = urlparse(direct_url)
+                qs = parse_qs(parsed.query)
+                cid = qs.get("cid", [None])[0]
+                tid = qs.get("tid", [None])[0]
+                if cid and tid:
+                    estimates_url = f"{TIKR_BASE_URL}/stock/estimates?{urlencode({'cid': cid, 'tid': tid, 'tab': 'est'})}"
+                else:
+                    estimates_url = direct_url
+                print(f"Navigating directly to: {estimates_url}")
+                page.goto(estimates_url, wait_until="domcontentloaded")
                 try:
                     page.wait_for_load_state("networkidle", timeout=15000)
                 except PlaywrightTimeout:
@@ -383,10 +401,11 @@ def extract_estimates(ticker: str, output_dir: Path, headless: bool = True,
                     print("Error: Estimates table did not load.", file=sys.stderr)
                     sys.exit(1)
             else:
-                print(f"Navigating to TIKR estimates for {ticker} ...")
-                if not navigate_to_ticker_estimates(page, ticker, exchange=exchange):
-                    sys.exit(1)
-                print(f"Landed on: {page.url}")
+                print(
+                    f"Error: No URL for {ticker}. Pass --url <tikr-url> or add an entry to tikr_url_cache.json.",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
 
             # Save the resolved URL to cache so future runs go directly to the right page
             landed_url = page.url

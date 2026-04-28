@@ -91,9 +91,9 @@ def main() -> None:
     parser.add_argument(
         "--filings-delay",
         type=int,
-        default=120,
+        default=60,
         metavar="SECONDS",
-        help="Seconds to wait before running the filings download step (default: 120).",
+        help="Seconds to wait before running the filings download step (default: 60).",
     )
     args = parser.parse_args()
 
@@ -163,7 +163,8 @@ def main() -> None:
             ),
         ]
 
-    ok = all(run(cmd, label, delay) for cmd, label, delay in steps)
+    results = [run(cmd, label, delay) for cmd, label, delay in steps]
+    ok = all(results)
     sys.exit(0 if ok else 1)
 
 

@@ -30,7 +30,7 @@ import glob
 import os
 import re
 
-FILING_TYPES = ["10-K", "10-Q"]
+FILING_TYPES = ["10-K", "10-Q", "20-F"]
 STATEMENT_TYPES = {
     "income_statement": "income_statement",
     "balance_sheet": "balance_sheet",
