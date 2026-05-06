@@ -242,7 +242,7 @@ def call_claude_cli(prompt: str, model: str, doc_paths: list[Path]) -> str:
 # Main
 # ---------------------------------------------------------------------------
 
-RESEARCH_OBSIDIAN_BASE = Path("/Users/mh/Documents/agcm2/03_eq/0_research")
+RESEARCH_OBSIDIAN_BASE = Path.home() / "agcm2" / "0_research"
 
 
 def find_obsidian_earnings_dir(ticker: str) -> Path:
